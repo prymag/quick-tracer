@@ -7,4 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class People extends Model
 {
     protected $fillable = ['firstname', 'lastname', 'middlename', 'email', 'birthdate', 'gender'];
+    protected $casts = [
+        'gender' => 'integer',
+    ];
 }
