@@ -1,8 +1,9 @@
-import request from "../helpers/axios";
+import axios, { AxiosRequestConfig, CancelTokenSource } from "axios";
+import request, { getConfig, getCancelSource, cancel } from "../helpers/axios";
 
 const path = '/people';
 
-export interface IPeople {
+export interface IPerson {
     id: number,
     firstname: string,
     lastname: string,
@@ -14,25 +15,12 @@ export interface IPeople {
 
 export interface IAllResponse {
     data: {
-        data: IPeople[]
+        data: IPerson[]
     }
 }
 
-export const getAll = (): Promise<IAllResponse> => {
-    return request.get(`${path}`);
-}
-
-export const getItem = (id: number) => {
-    request.get(`${path}/${id}`);
-}
-
-export const updateItem = (id: number, body: IPeople) => {
-    request.patch(`${path}/${id}`)
-}
-
-export const deleteItem = (id: number) => {
-    request.delete(`${path}/${id}`);
-}
-
-
-
+export const getAll = (source: CancelTokenSource): Promise<IAllResponse> => request.get(`${path}`, getConfig(source.token));
+export const getItem = (id: number) => request.get(`${path}/${id}`);
+export const updateItem = (id: number, body: IPerson) => request.patch(`${path}/${id}`)
+export const deleteItem = (id: number) => request.delete(`${path}/${id}`);
+export { getCancelSource, cancel }

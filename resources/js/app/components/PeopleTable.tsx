@@ -1,32 +1,83 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { getAll, IPeople } from "../api/people";
+import React, { useCallback, useEffect, useState } from "react";
+import { getCancelSource, getAll, deleteItem, cancel, IPerson } from "../api/people";
+import "./styles.scss";
 
 interface IStates {
-    people: Array<IPeople>,
+    people: Array<IPerson>,
     loading: Boolean
 }
 
+interface ITableRowProps {
+    person: IPerson,
+    deleteCb: Function
+}
+
 const loadTable = (data: IStates, setData: React.Dispatch<any>) => {
+    const source = getCancelSource();
+
     (async () => {
         setData({...data, loading: true});
-        const res = await getAll();
-        console.log(data, res.data.data);
-        setData({people: res.data.data, loading: false});
 
-        
+        try {
+            const res = await getAll(source);
+            setData({people: res.data.data, loading: false});
+        } catch (e) {
+            console.log(e);
+            //setData({...data, loading: false});
+        }
     })()
+
+    return () => {
+        console.log('cancelled');
+
+        cancel(source);
+    };
+}
+
+const deleteData = async (id: number, data: IStates, setData: React.Dispatch<any>) => {
+    const res = await deleteItem(id);
+    const index = data.people.findIndex(person => person.id === id);
+    data.people.splice(index, 1);
+    setData({...data, people: data.people});
+
+    return () => {};
 }
 
 const getGender = (id: number) => {
-
-    if (parseInt(id) === 1) {
+    if (id === 1) {
         return 'Male';
     }
-    if (parseInt(id) === 2) {
+    if (id === 2) {
         return 'Female';
     }
 
     return 'Unknown';
+}
+
+const TableRow = (props: ITableRowProps) => {
+
+    const [data, setData] = useState({
+        promptDelete: false,
+        isDeleting: false
+    })
+    const name = `${props.person.firstname} ${props.person.middlename} ${props.person.lastname}`;
+
+    const handleClick = (ev: React.MouseEvent<HTMLElement>) => {
+        ev.preventDefault();
+        setData({...data, isDeleting: true});
+        props.deleteCb(props.person.id);
+    }
+
+    return (<tr >
+        <td>{name}</td>
+        <td>{props.person.email}</td>
+        <td>{getGender(props.person.gender)}</td>
+        <td>{props.person.birthdate}</td>
+        <td>
+            {!data.isDeleting && <a href="#" onClick={handleClick}>Delete</a>}
+            {data.isDeleting && <strong>Deleting...</strong>}
+        </td>
+    </tr>)
 }
 
 const PeopleTable = () => {
@@ -37,33 +88,31 @@ const PeopleTable = () => {
     })
 
     useEffect(() => loadTable(data, setData), []);
+    
 
-    const tblRows = data.people.map(person => {
-        return (<tr key={person.id}>
-            <td>{person.firstname} {person.middlename} {person.lastname}</td>
-            <td>{person.email}</td>
-            <td>{getGender(person.gender)}</td>
-            <td>{person.birthdate}</td>
-        </tr>)
-    })
+    const onDelete = (id: number) => deleteData(id, data, setData);
 
     return (<div>
-        {data.loading && 'loading'}
-        People Table
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Gender</th>
-                    <th>Birthdate</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {tblRows}
-            </tbody>
-        </table>
+        {data.loading && <h3>Loading...</h3>}
+        
+        {!!data.people.length && 
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Gender</th>
+                        <th>Birthdate</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.people.map(person => {
+                        return <TableRow person={person} key={person.id} deleteCb={onDelete}/>
+                    })}
+                </tbody>
+            </table>
+        }
     </div>)
 }
 
