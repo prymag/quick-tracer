@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { getCancelSource, getAll, deleteItem, cancel, IPerson } from "../api/people";
-import "./styles.scss";
+import { Link, match, useRouteMatch } from "react-router-dom";
+import { getCancelSource, getAll, deleteItem, cancel, IPerson } from "../../api/people";
 
 interface IStates {
     people: Array<IPerson>,
@@ -9,7 +9,8 @@ interface IStates {
 
 interface ITableRowProps {
     person: IPerson,
-    deleteCb: Function
+    deleteCb: Function,
+    match: match<{}>
 }
 
 const loadTable = (data: IStates, setData: React.Dispatch<any>) => {
@@ -56,6 +57,7 @@ const getGender = (id: number) => {
 
 const TableRow = (props: ITableRowProps) => {
 
+
     const [data, setData] = useState({
         promptDelete: false,
         isDeleting: false
@@ -69,7 +71,7 @@ const TableRow = (props: ITableRowProps) => {
     }
 
     return (<tr >
-        <td>{name}</td>
+        <td><Link to={`${props.match.url}/${props.person.id}`}>{name}</Link></td>
         <td>{props.person.email}</td>
         <td>{getGender(props.person.gender)}</td>
         <td>{props.person.birthdate}</td>
@@ -88,11 +90,12 @@ const PeopleTable = () => {
     })
 
     useEffect(() => loadTable(data, setData), []);
-    
 
+    const match = useRouteMatch();
     const onDelete = (id: number) => deleteData(id, data, setData);
 
     return (<div>
+        <Link to={`${match.url}/create`}>Create</Link>
         {data.loading && <h3>Loading...</h3>}
         
         {!!data.people.length && 
@@ -108,7 +111,11 @@ const PeopleTable = () => {
                 </thead>
                 <tbody>
                     {data.people.map(person => {
-                        return <TableRow person={person} key={person.id} deleteCb={onDelete}/>
+                        return <TableRow 
+                            person={person} 
+                            key={person.id} 
+                            deleteCb={onDelete}
+                            match={match} />
                     })}
                 </tbody>
             </table>

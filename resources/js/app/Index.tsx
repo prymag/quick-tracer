@@ -7,7 +7,6 @@ import {
     Link
 } from "react-router-dom";
 
-import PeopleTable from "./components/PeopleTable";
 import People from './components/people';
 
 const App = (): JSX.Element => {
