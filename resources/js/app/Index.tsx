@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import PeopleTable from "./components/PeopleTable";
+import People from './components/people';
 
 const App = (): JSX.Element => {
 	return (
@@ -23,7 +24,7 @@ const App = (): JSX.Element => {
 
         <Switch>
           <Route path="/people">
-            <PeopleTable />
+            <People />
           </Route>
           <Route path="/">
             Welcome HOme
